@@ -5,7 +5,7 @@ module.exports = {
       less: {
         lessOptions: {
           modifyVars:{
-            'border-radius-base': '2px'
+            'border-radius-base': '0px'
           },
           javascriptEnabled: true
         }

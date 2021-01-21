@@ -94,6 +94,7 @@ export default {
 		handleClick(e) {
 			let key = e.key
 			this.selectedKeys = [`${key}`]
+			this.resotoreEditor()
 		},
 		//初始化editor
 		initJsonEditor() {
@@ -215,6 +216,9 @@ export default {
 	display: none;
 }
 #Config {
+	#modelEditor,#jsonEditor{
+		height: calc(100% - 80px);
+	}
 	.midDiv {
 		position: relative;
 	}

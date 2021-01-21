@@ -7,6 +7,7 @@
 					theme="dark"
 					mode="horizontal"
 					:default-selected-keys="defaultSelectedKeys"
+					@click="handleClick"
 					:style="{ lineHeight: '64px' }"
 				>
 					<a-menu-item key="1"> Config </a-menu-item>
@@ -35,20 +36,35 @@ export default {
 	created() {
 		this.init()
 	},
-	mounted() {
-		
-	},
+	mounted() {},
 	methods: {
+		handleClick(e) {
+			let key = e.key
+			this.defaultSelectedKeys = [`${key}`]
+			switch (key) {
+				case "1":
+					this.$router.push('/home/config')
+					break
+				case "2":
+					this.$router.push('/home/hardware')
+					break
+				case "3":
+					this.$router.push('/home/runtime')
+					break
+				default:
+					break
+			}
+		},
 		init() {
 			let path = this.$route.path
 			switch (path) {
 				case "/home/config":
 					this.defaultSelectedKeys = ["1"]
 					break
-				case "/personCenter/personPassword":
+				case "/home/hardware":
 					this.defaultSelectedKeys = ["2"]
 					break
-				case "/personCenter/personManagement":
+				case "/home/runtime":
 					this.defaultSelectedKeys = ["3"]
 					break
 				default:
@@ -72,8 +88,8 @@ export default {
 		margin: 16px 24px 16px 0;
 		float: left;
 	}
-	/deep/ .ant-layout{
-		min-width: 1200px
+	/deep/ .ant-layout {
+		min-width: 1200px;
 	}
 	/deep/ .ant-layout-content {
 		margin-top: 20px;

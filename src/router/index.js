@@ -19,6 +19,16 @@ const routes = [
 				name: "config",
 				component: () => import("../views/Config.vue"),
 			},
+			{
+				path: "/home/hardware",
+				name: "hardware",
+				component: () => import("../views/Hardware.vue"),
+			},
+			{
+				path: "/home/runtime",
+				name: "runtime",
+				component: () => import("../views/Runtime.vue"),
+			},
 		],
 	},
 

@@ -28,7 +28,7 @@ let testData = {
 	linkToPortIdProperty: "topid",
 	nodeDataArray: [
 		{ key: 1, category: "Computer", name: "Computer1" },
-		{ key: 2, category: "Computer", name: "Computer2" ,color:"red"},
+		{ key: 2, category: "Computer", name: "Computer2", color: "red" },
 		{ key: 3, category: "Computer", name: "Computer3" },
 		{ key: 4, category: "Computer", name: "Computer4" },
 		{ key: 11, category: "GPU", name: "gpu1" },
@@ -45,7 +45,7 @@ let testData = {
 	],
 	linkDataArray: [
 		{ from: 1, frompid: "UL", to: 11, topid: "" },
-		{ from: 2, frompid: "OUT", to: 11, topid: "R", color: "red",arrowColor:"red" },
+		{ from: 2, frompid: "OUT", to: 11, topid: "R", color: "red", arrowColor: "red" },
 		{ from: 3, frompid: "OUT", to: 12, topid: "R" },
 		{ from: 4, frompid: "OUT", to: 13, topid: "R" },
 		{ from: 11, frompid: "M", to: 12, topid: "L" },
@@ -153,7 +153,16 @@ export default {
 					relinkableTo: true,
 				},
 				$(go.Shape, { stroke: "gray", strokeWidth: 2 }, new go.Binding("stroke", "color")),
-				$(go.Shape, { stroke: "gray", fill: "gray", toArrow: "Standard" },new go.Binding("stroke", "arrowColor"))
+				$(
+					go.Shape,
+					{ stroke: "gray", fill: "gray", toArrow: "Standard" }, //Line 无向 standard 有向 
+					new go.Binding("stroke", "arrowColor"), //箭头边线颜色
+					new go.Binding("fill", "arrowColor"),//箭头内部颜色
+					new go.Binding("toArrow", "arrow"),//箭头样式
+				),
+				{
+					contextMenu: this.setLinkMenu(),
+				}
 			)
 		},
 		//动画方法
@@ -216,13 +225,18 @@ export default {
 					go.Panel,
 					"Auto",
 					{ width: 100, height: 120 },
-					$(go.Shape, "Rectangle", {
-						fill:background,
-						stroke: null,
-						strokeWidth: 0,
-						spot1: go.Spot.TopLeft,
-						spot2: go.Spot.BottomRight,
-					},new go.Binding("fill", "color")),
+					$(
+						go.Shape,
+						"Rectangle",
+						{
+							fill: background,
+							stroke: null,
+							strokeWidth: 0,
+							spot1: go.Spot.TopLeft,
+							spot2: go.Spot.BottomRight,
+						},
+						new go.Binding("fill", "color")
+					),
 					$(
 						go.Panel,
 						"Table",
@@ -277,9 +291,42 @@ export default {
 		save() {
 			console.log(myDiagram.model.toJson())
 		},
-		//开始
-		start() {
-			
+		//设置连接线右键菜单
+		setLinkMenu() {
+			let self = this
+			let linkMenu = $(
+				"ContextMenu",
+				self.makeButton("Delete", function(e, obj) {
+					e.diagram.commandHandler.deleteSelection()
+				}),
+				self.makeButton("Directional arrow", function(e, obj) {
+					self.changeArrow(obj.part.adornedObject, "Standard")
+				}),
+				self.makeButton("Undirected arrow", function(e, obj) {
+					self.changeArrow(obj.part.adornedObject, "Line")
+				})
+			)
+			return linkMenu
+		},
+		//创建右键菜单按键
+		makeButton(text, action, visiblePredicate) {
+			return $(
+				"ContextMenuButton",
+				$(go.TextBlock, text),
+				{ click: action },
+				visiblePredicate
+					? new go.Binding("visible", "", function(o, e) {
+							return o.diagram ? visiblePredicate(o, e) : false
+					  }).ofObject()
+					: {}
+			)
+		},
+		//修改连接线箭头
+		changeArrow(link, type) {
+			myDiagram.startTransaction("typeArrow")
+			let data = link.data
+			myDiagram.model.setDataProperty(data, "arrow", type)
+			myDiagram.commitTransaction("typeArrow")
 		},
 	},
 }

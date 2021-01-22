@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import { destoryLineAndScatter,destoryGanttChart } from "../assets/js/g2-module.js"
 export default {
 	name: "Home",
 	components: {},
@@ -41,15 +42,17 @@ export default {
 		handleClick(e) {
 			let key = e.key
 			this.defaultSelectedKeys = [`${key}`]
+			destoryLineAndScatter()
+			destoryGanttChart()
 			switch (key) {
 				case "1":
-					this.$router.push('/home/config')
+					this.$router.push("/home/config")
 					break
 				case "2":
-					this.$router.push('/home/hardware')
+					this.$router.push("/home/hardware")
 					break
 				case "3":
-					this.$router.push('/home/runtime')
+					this.$router.push("/home/runtime")
 					break
 				default:
 					break

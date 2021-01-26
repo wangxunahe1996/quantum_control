@@ -3,16 +3,143 @@
 		<div id="myPaletteDiv" class="leftDiv"></div>
 		<div id="myDiagramDiv" class="rightDiv"></div>
 		<div class="btnGroup">
+			<a-button type="primary" @click="setLeftPalette">
+				Add
+			</a-button>
 			<a-button type="primary" @click="save">
 				console.log
 			</a-button>
-			<!-- <a-button type="primary" @click="start">
-				start
-			</a-button> -->
-			<!-- <a-button type="primary" @click="resotoreEditor">
-				restore
-			</a-button> -->
 		</div>
+		<a-modal title="Add" :visible="visible" :confirm-loading="confirmLoading" @ok="handleOk" @cancel="handleCancel">
+			<a-form-model ref="dynamicValidateForm" :model="dynamicValidateForm" v-bind="formItemLayoutWithOutLabel">
+				<a-form-model-item
+					key="4"
+					v-bind="formItemLayout"
+					label="Type"
+					prop="hardwareType"
+					:rules="{
+						required: true,
+						message: 'hardware type can not be null',
+						trigger: 'blur',
+					}"
+				>
+					<a-input
+						v-model="dynamicValidateForm.hardwareType"
+						placeholder="please input left hardware type"
+						style="width: 60%; margin-right: 8px"
+					/>
+				</a-form-model-item>
+				<a-form-model-item
+					key="5"
+					v-bind="formItemLayout"
+					label="Name"
+					prop="hardwareName"
+					:rules="{
+						required: true,
+						message: 'hardware name can not be null',
+						trigger: 'blur',
+					}"
+				>
+					<a-input
+						v-model="dynamicValidateForm.hardwareName"
+						placeholder="please input left hardware name"
+						style="width: 60%; margin-right: 8px"
+					/>
+				</a-form-model-item>
+				<a-form-model-item
+					key="3"
+					v-bind="formItemLayout"
+					label="Color"
+					prop="hardwareColor"
+					:rules="{
+						required: true,
+						message: 'hardware Color can not be null',
+						trigger: 'blur',
+					}"
+				>
+					<a-input
+						v-model="dynamicValidateForm.hardwareColor"
+						placeholder="please input left hardware Color"
+						style="width: 60%; margin-right: 8px"
+					/>
+				</a-form-model-item>
+				<a-form-model-item
+					v-for="(leftPort, index) in dynamicValidateForm.leftPorts"
+					:key="leftPort.key"
+					v-bind="index === 0 ? formItemLayout : {}"
+					:label="index === 0 ? 'Left Ports' : ''"
+					:prop="'leftPorts.' + index + '.value'"
+					:rules="{
+						required: true,
+						message: 'left port can not be null',
+						trigger: 'blur',
+					}"
+				>
+					<a-input
+						v-model="leftPort.value"
+						placeholder="please input left port name"
+						style="width: 60%; margin-right: 8px"
+					/>
+					<a-icon
+						v-if="dynamicValidateForm.leftPorts.length > 1"
+						class="dynamic-delete-button"
+						type="minus-circle-o"
+						:disabled="dynamicValidateForm.leftPorts.length === 1"
+						@click="removeLeftPort(leftPort)"
+					/>
+				</a-form-model-item>
+				<a-form-model-item v-bind="formItemLayoutWithOutLabel" v-if="dynamicValidateForm.leftPorts.length < 7">
+					<a-button type="dashed" style="width: 60%" @click="addLeftPort">
+						<a-icon type="plus" /> Add field
+					</a-button>
+				</a-form-model-item>
+				<a-form-model-item v-bind="formItemLayoutWithOutLabel" v-if="dynamicValidateForm.leftPorts.length >= 7">
+					<p style="color:red;">最多支持添加7个端口</p>
+				</a-form-model-item>
+
+				<a-form-model-item
+					v-for="(rightPort, index) in dynamicValidateForm.rightPorts"
+					:key="rightPort.key"
+					v-bind="index === 0 ? formItemLayout : {}"
+					:label="index === 0 ? 'Reft Ports' : ''"
+					:prop="'rightPorts.' + index + '.value'"
+					:rules="{
+						required: true,
+						message: 'right port can not be null',
+						trigger: 'blur',
+					}"
+				>
+					<a-input
+						v-model="rightPort.value"
+						placeholder="please input right port name"
+						style="width: 60%; margin-right: 8px"
+					/>
+					<a-icon
+						v-if="dynamicValidateForm.rightPorts.length > 1"
+						class="dynamic-delete-button"
+						type="minus-circle-o"
+						:disabled="dynamicValidateForm.rightPorts.length === 1"
+						@click="removeRightPort(rightPort)"
+					/>
+				</a-form-model-item>
+				<a-form-model-item v-bind="formItemLayoutWithOutLabel">
+					<a-button
+						type="dashed"
+						style="width: 60%"
+						@click="addRightPort"
+						v-if="dynamicValidateForm.rightPorts.length < 7"
+					>
+						<a-icon type="plus" /> Add field
+					</a-button>
+				</a-form-model-item>
+				<a-form-model-item
+					v-bind="formItemLayoutWithOutLabel"
+					v-if="dynamicValidateForm.rightPorts.length >= 7"
+				>
+					<p style="color:red;">最多支持添加7个端口</p>
+				</a-form-model-item>
+			</a-form-model>
+		</a-modal>
 	</div>
 </template>
 
@@ -44,7 +171,7 @@ let testData = {
 		{ key: 71, category: "GPU", name: "gpu8" },
 	],
 	linkDataArray: [
-		{ from: 1, frompid: "UL", to: 11, topid: "" },
+		{ from: 1, frompid: "UL", to: 11, topid: "", text: "hello" },
 		{ from: 2, frompid: "OUT", to: 11, topid: "R", color: "red", arrowColor: "red" },
 		{ from: 3, frompid: "OUT", to: 12, topid: "R" },
 		{ from: 4, frompid: "OUT", to: 13, topid: "R" },
@@ -65,6 +192,41 @@ export default {
 	data() {
 		return {
 			testData,
+			confirmLoading: false,
+			visible: false,
+			formItemLayout: {
+				labelCol: {
+					xs: { span: 24 },
+					sm: { span: 4 },
+				},
+				wrapperCol: {
+					xs: { span: 24 },
+					sm: { span: 20 },
+				},
+			},
+			formItemLayoutWithOutLabel: {
+				wrapperCol: {
+					xs: { span: 24, offset: 0 },
+					sm: { span: 20, offset: 4 },
+				},
+			},
+			dynamicValidateForm: {
+				hardwareColor: undefined,
+				hardwareType: undefined,
+				hardwareName: undefined,
+				leftPorts: [
+					{
+						key: "1",
+						value: undefined,
+					},
+				],
+				rightPorts: [
+					{
+						key: "2",
+						value: undefined,
+					},
+				],
+			},
 		}
 	},
 	mounted() {
@@ -82,8 +244,75 @@ export default {
 				"undoManager.isEnabled": true,
 			})
 			//设置模板
-			// this.makeTemplate("Table", "../assets/images/table.svg", "forestgreen", [], [this.makePort("OUT", false)])
-
+			this.setTemplate()
+			this.load()
+			this.initLeftPalette()
+			//设置连接线
+			myDiagram.linkTemplate = $(
+				go.Link,
+				{
+					routing: go.Link.Orthogonal,
+					corner: 5,
+					relinkableFrom: true,
+					relinkableTo: true,
+				},
+				$(go.Shape, { stroke: "gray", strokeWidth: 2 }, new go.Binding("stroke", "color")),
+				$(
+					go.Shape,
+					{ stroke: "gray", fill: "gray", toArrow: "Standard" }, //Line 无向 standard 有向
+					new go.Binding("stroke", "arrowColor"), //箭头边线颜色
+					new go.Binding("fill", "arrowColor"), //箭头内部颜色
+					new go.Binding("toArrow", "arrow") //箭头样式
+				),
+				$(
+					go.Panel,
+					"Auto",
+					$(
+						go.TextBlock,
+						"transition", // the label text
+						{
+							textAlign: "center",
+							font: "9pt helvetica, arial, sans-serif",
+							margin: 4,
+							editable: true, // enable in-place editing
+						},
+						new go.Binding("text").makeTwoWay()
+					)
+				),
+				{
+					contextMenu: this.setLinkMenu(),
+				}
+			)
+		},
+		//初始化左侧模板
+		initLeftPalette(paletteData) {
+			
+			
+			if (myPalette) {
+				myPalette.div = null
+			}
+			let data = [
+				{ category: "Computer", name: "Computer" },
+				{ category: "GPU", name: "GPU" },
+				{ category: "CPU", name: "CPU" },
+			]
+			
+			if (paletteData) {
+				paletteData = [...data,paletteData]
+			} else {
+				paletteData = data
+			}
+			
+			//初始化配置面板
+			myPalette = $(go.Palette, "myPaletteDiv", {
+				"animationManager.initialAnimationStyle": go.AnimationManager.None,
+				InitialAnimationStarting: this.animateFadeDown,
+				nodeTemplateMap: myDiagram.nodeTemplateMap,
+				model: new go.GraphLinksModel(paletteData),
+			})
+		},
+		//设置模板
+		setTemplate() {
 			this.makeTemplate(
 				"Computer",
 				"/images/computer.svg",
@@ -97,7 +326,6 @@ export default {
 					this.makePort("UR", false),
 				]
 			)
-
 			this.makeTemplate(
 				"CPU",
 				"/images/cpu.svg",
@@ -105,64 +333,12 @@ export default {
 				[this.makePort("", true)],
 				[this.makePort("OUT", false)]
 			)
-
-			// this.makeTemplate(
-			// 	"Filter",
-			// 	"../assets/images/filter.svg",
-			// 	"cornflowerblue",
-			// 	[this.makePort("", true)],
-			// 	[this.makePort("OUT", false), this.makePort("INV", false)]
-			// )
-
 			this.makeTemplate(
 				"GPU",
 				"/images/gpu.svg",
 				"mediumpurple",
 				[this.makePort("", true)],
 				[this.makePort("OUT", false)]
-			)
-
-			// this.makeTemplate(
-			// 	"Sort",
-			// 	"../assets/images/sort.svg",
-			// 	"sienna",
-			// 	[this.makePort("", true)],
-			// 	[this.makePort("OUT", false)]
-			// )
-
-			// this.makeTemplate("Export", "../assets/images/upload.svg", "darkred", [this.makePort("", true)], [])
-			this.load()
-			//初始化配置面板
-			myPalette = $(go.Palette, "myPaletteDiv", {
-				"animationManager.initialAnimationStyle": go.AnimationManager.None,
-				InitialAnimationStarting: this.animateFadeDown,
-				nodeTemplateMap: myDiagram.nodeTemplateMap,
-				model: new go.GraphLinksModel([
-					{ category: "Computer", name: "Computer" },
-					{ category: "GPU", name: "GPU" },
-					{ category: "CPU", name: "CPU" },
-				]),
-			})
-			//设置连接线
-			myDiagram.linkTemplate = $(
-				go.Link,
-				{
-					routing: go.Link.Orthogonal,
-					corner: 5,
-					relinkableFrom: true,
-					relinkableTo: true,
-				},
-				$(go.Shape, { stroke: "gray", strokeWidth: 2 }, new go.Binding("stroke", "color")),
-				$(
-					go.Shape,
-					{ stroke: "gray", fill: "gray", toArrow: "Standard" }, //Line 无向 standard 有向 
-					new go.Binding("stroke", "arrowColor"), //箭头边线颜色
-					new go.Binding("fill", "arrowColor"),//箭头内部颜色
-					new go.Binding("toArrow", "arrow"),//箭头样式
-				),
-				{
-					contextMenu: this.setLinkMenu(),
-				}
 			)
 		},
 		//动画方法
@@ -327,6 +503,92 @@ export default {
 			let data = link.data
 			myDiagram.model.setDataProperty(data, "arrow", type)
 			myDiagram.commitTransaction("typeArrow")
+		},
+		//设置左侧模板
+		setLeftPalette() {
+			this.visible = true
+		},
+		handleOk() {
+			this.$refs["dynamicValidateForm"].validate((valid) => {
+				if (valid) {
+				
+					// this.visible = false
+					this.confirmLoading = true
+					let makeLeftPorts = []
+					let makeRightPorts = []
+					this.dynamicValidateForm.leftPorts.map((item) => {
+						makeLeftPorts.push(this.makePort(item.value, true))
+					})
+					this.dynamicValidateForm.rightPorts.map((item) => {
+						makeRightPorts.push(this.makePort(item.value, false))
+					})
+					this.makeTemplate(
+						this.dynamicValidateForm.hardwareType,
+						"/images/cpu.svg",
+						this.dynamicValidateForm.hardwareColor,
+						makeLeftPorts,
+						makeRightPorts
+					)
+					// console.log(myDiagram.nodeTemplateMap)
+					this.initLeftPalette({
+						category: this.dynamicValidateForm.hardwareType,
+						name: this.dynamicValidateForm.hardwareName,
+					})
+					this.confirmLoading = false
+					this.visible = false
+				}
+			})
+		},
+		handleCancel() {
+			this.visible = false
+			this.dynamicValidateForm = {
+				hardwareName: undefined,
+				hardwareType: undefined,
+				leftPorts: [
+					{
+						key: "1",
+						value: undefined,
+					},
+				],
+				rightPorts: [
+					{
+						key: "2",
+						value: undefined,
+					},
+				],
+			}
+		},
+
+		resetForm(formName) {
+			this.$refs[formName].resetFields()
+		},
+		//移除左侧端口
+		removeLeftPort(item) {
+			let index = this.dynamicValidateForm.leftPorts.indexOf(item)
+			if (index !== -1) {
+				this.dynamicValidateForm.leftPorts.splice(index, 1)
+			}
+		},
+		//移除右侧端口
+		removeRightPort(item) {
+			let index = this.dynamicValidateForm.rightPorts.indexOf(item)
+			if (index !== -1) {
+				this.dynamicValidateForm.rightPorts.splice(index, 1)
+			}
+		},
+		//添加左侧端口
+		addLeftPort() {
+			this.dynamicValidateForm.leftPorts.push({
+				value: "",
+				key: Date.now(),
+			})
+		},
+		//添加右侧端口
+		addRightPort() {
+			this.dynamicValidateForm.rightPorts.push({
+				value: "",
+				key: Date.now(),
+			})
 		},
 	},
 }

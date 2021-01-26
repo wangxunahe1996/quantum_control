@@ -12,6 +12,7 @@
     "@antv/g2": "^4.1.7",
     "ant-design-vue": "^1.7.2",
     "axios": "^0.21.1",
+    "echarts": "^5.0.1",
     "highcharts": "^8.2.2",
     "jsoneditor": "^9.1.8",
     "unset-value": "^1.0.0",

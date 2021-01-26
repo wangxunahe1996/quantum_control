@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import { destoryLineAndScatter,destoryGanttChart } from "../assets/js/g2-module.js"
+import { destoryGanttChart } from "../assets/js/g2-module.js"
 export default {
 	name: "Home",
 	components: {},
@@ -42,7 +42,6 @@ export default {
 		handleClick(e) {
 			let key = e.key
 			this.defaultSelectedKeys = [`${key}`]
-			destoryLineAndScatter()
 			destoryGanttChart()
 			switch (key) {
 				case "1":

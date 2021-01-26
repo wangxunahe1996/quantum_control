@@ -24,6 +24,7 @@ import {
 	Menu,
 	Modal,
 	Layout,
+	Radio
 } from "ant-design-vue"
 Vue.use(Button)
 Vue.use(FormModel)
@@ -45,6 +46,7 @@ Vue.use(Popconfirm)
 Vue.use(Menu)
 Vue.use(Modal)
 Vue.use(Layout)
+Vue.use(Radio)
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = Modal.confirm
 Number.prototype.toRound = function(num) {

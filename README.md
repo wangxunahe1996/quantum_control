@@ -19,3 +19,4 @@ npm run build
 ```
 npm run plop component
 ```
+### 说明书和开发介绍见node文件夹

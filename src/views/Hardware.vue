@@ -3,11 +3,15 @@
 		<div id="myPaletteDiv" class="leftDiv"></div>
 		<div id="myDiagramDiv" class="rightDiv"></div>
 		<div class="btnGroup">
+			<a-input-search placeholder="input search text" enter-button @search="onSearch" />
 			<a-button type="primary" @click="setLeftPalette">
 				Add
 			</a-button>
-			<a-button type="primary" @click="save">
-				console.log
+			<a-button type="primary" @click="loadData">
+				Load
+			</a-button>
+			<a-button type="primary" @click="showData">
+				Show
 			</a-button>
 		</div>
 		<a-modal title="Add" :visible="visible" :confirm-loading="confirmLoading" @ok="handleOk" @cancel="handleCancel">
@@ -140,6 +144,12 @@
 				</a-form-model-item>
 			</a-form-model>
 		</a-modal>
+		<a-modal title="loadData" :visible="loadVisible" @ok="confirmLoad" @cancel="cancelLoad" width="60%">
+			<a-textarea placeholder="json data" :rows="10" v-model="jsonData" />
+		</a-modal>
+		<a-modal title="showData" :visible="showVisible" width="60%" :footer="null" @cancel="cancelShowData">
+			<a-textarea placeholder="json data" :rows="10" v-model="showJsonData" />
+		</a-modal>
 	</div>
 </template>
 
@@ -148,50 +158,17 @@ import * as go from "../assets/js/go-module.js"
 let $ = go.GraphObject.make
 //画板盒子
 let myDiagram, myPalette
-let testData = {
-	class: "go.GraphLinksModel",
-	// nodeCategoryProperty: "type",
-	linkFromPortIdProperty: "frompid",
-	linkToPortIdProperty: "topid",
-	nodeDataArray: [
-		{ key: 1, category: "Computer", name: "Computer1" },
-		{ key: 2, category: "Computer", name: "Computer2", color: "red" },
-		{ key: 3, category: "Computer", name: "Computer3" },
-		{ key: 4, category: "Computer", name: "Computer4" },
-		{ key: 11, category: "GPU", name: "gpu1" },
-		{ key: 12, category: "GPU", name: "gpu2" },
-		{ key: 13, category: "GPU", name: "gpu3" },
-		{ key: 21, category: "CPU", name: "cpu1" },
-		{ key: 31, category: "CPU", name: "cpu2" },
-		{ key: 32, category: "CPU", name: "cpu3" },
-		{ key: 41, category: "GPU", name: "GPU4" },
-		{ key: 42, category: "GPU", name: "gpu5" },
-		{ key: 51, category: "GPU", name: "gpu6" },
-		{ key: 61, category: "GPU", name: "gpu7" },
-		{ key: 71, category: "GPU", name: "gpu8" },
-	],
-	linkDataArray: [
-		{ from: 1, frompid: "UL", to: 11, topid: "", text: "hello" },
-		{ from: 2, frompid: "OUT", to: 11, topid: "R", color: "red", arrowColor: "red" },
-		{ from: 3, frompid: "OUT", to: 12, topid: "R" },
-		{ from: 4, frompid: "OUT", to: 13, topid: "R" },
-		{ from: 11, frompid: "M", to: 12, topid: "L" },
-		{ from: 12, frompid: "M", to: 13, topid: "L" },
-		{ from: 13, frompid: "M", to: 21 },
-		{ from: 21, frompid: "OUT", to: 31 },
-		{ from: 21, frompid: "OUT", to: 32 },
-		{ from: 31, frompid: "OUT", to: 41 },
-		{ from: 32, frompid: "OUT", to: 42 },
-		{ from: 41, frompid: "OUT", to: 51, topid: "L" },
-		{ from: 42, frompid: "OUT", to: 51, topid: "R" },
-		{ from: 51, frompid: "OUT", to: 61 },
-		{ from: 61, frompid: "OUT", to: 71 },
-	],
-}
+
+// let testData =
 export default {
 	data() {
 		return {
-			testData,
+			jsonData: "",
+			showVisible: false,
+			showJsonData: "",
+			normalData:
+				'{"class":"go.GraphLinksModel","linkFromPortIdProperty":"frompid","linkToPortIdProperty":"topid","nodeDataArray":[{"key":1,"category":"Computer","name":"Computer1"},{"key":2,"category":"Computer","name":"Computer2","color":"red"},{"key":3,"category":"Computer","name":"Computer3"},{"key":4,"category":"Computer","name":"Computer4"},{"key":11,"category":"GPU","name":"gpu1"},{"key":12,"category":"GPU","name":"gpu2"},{"key":13,"category":"GPU","name":"gpu3"},{"key":21,"category":"CPU","name":"cpu1"},{"key":31,"category":"CPU","name":"cpu2"},{"key":32,"category":"CPU","name":"cpu3"},{"key":41,"category":"GPU","name":"GPU4"},{"key":42,"category":"GPU","name":"gpu5"},{"key":51,"category":"GPU","name":"gpu6"},{"key":61,"category":"GPU","name":"gpu7"},{"key":71,"category":"GPU","name":"gpu8"}],"linkDataArray":[{"from":1,"frompid":"UL","to":11,"topid":"","text":"hello"},{"from":2,"frompid":"OUT","to":11,"topid":"R","color":"red","arrowColor":"red"},{"from":3,"frompid":"OUT","to":12,"topid":"R"},{"from":4,"frompid":"OUT","to":13,"topid":"R"},{"from":11,"frompid":"M","to":12,"topid":"L"},{"from":12,"frompid":"M","to":13,"topid":"L"},{"from":13,"frompid":"M","to":21},{"from":21,"frompid":"OUT","to":31},{"from":21,"frompid":"OUT","to":32},{"from":31,"frompid":"OUT","to":41},{"from":32,"frompid":"OUT","to":42},{"from":41,"frompid":"OUT","to":51,"topid":"L"},{"from":42,"frompid":"OUT","to":51,"topid":"R"},{"from":51,"frompid":"OUT","to":61},{"from":61,"frompid":"OUT","to":71}]}',
+			// testData,
 			confirmLoading: false,
 			visible: false,
 			formItemLayout: {
@@ -227,6 +204,7 @@ export default {
 					},
 				],
 			},
+			loadVisible: false,
 		}
 	},
 	mounted() {
@@ -245,7 +223,7 @@ export default {
 			})
 			//设置模板
 			this.setTemplate()
-			this.load()
+
 			this.initLeftPalette()
 			//设置连接线
 			myDiagram.linkTemplate = $(
@@ -268,8 +246,19 @@ export default {
 					go.Panel,
 					"Auto",
 					$(
+						go.Shape, // the label background, which becomes transparent around the edges
+						{
+							fill: $(go.Brush, "Radial", {
+								0: "rgb(245, 245, 245)",
+								0.7: "rgb(245, 245, 245)",
+								1: "rgb(245, 245, 245)",
+							}),
+							stroke: null,
+						}
+					),
+					$(
 						go.TextBlock,
-						"transition", // the label text
+						"1", // the label text
 						{
 							textAlign: "center",
 							font: "9pt helvetica, arial, sans-serif",
@@ -283,11 +272,10 @@ export default {
 					contextMenu: this.setLinkMenu(),
 				}
 			)
+			this.load(this.normalData)
 		},
 		//初始化左侧模板
 		initLeftPalette(paletteData) {
-			
-			
 			if (myPalette) {
 				myPalette.div = null
 			}
@@ -296,13 +284,13 @@ export default {
 				{ category: "GPU", name: "GPU" },
 				{ category: "CPU", name: "CPU" },
 			]
-			
+
 			if (paletteData) {
-				paletteData = [...data,paletteData]
+				paletteData = [...data, paletteData]
 			} else {
 				paletteData = data
 			}
-			
+
 			//初始化配置面板
 			myPalette = $(go.Palette, "myPaletteDiv", {
 				"animationManager.initialAnimationStyle": go.AnimationManager.None,
@@ -460,8 +448,10 @@ export default {
 			myDiagram.nodeTemplateMap.set(typename, node)
 		},
 		//数据加载画布
-		load() {
-			myDiagram.model = go.Model.fromJson(JSON.stringify(this.testData))
+		load(data) {
+			myDiagram.model = go.Model.fromJson(JSON.parse(data))
+			this.showJsonData = myDiagram.model.toJson()
+			
 		},
 		//打印数据
 		save() {
@@ -508,10 +498,10 @@ export default {
 		setLeftPalette() {
 			this.visible = true
 		},
+		//确认添加
 		handleOk() {
 			this.$refs["dynamicValidateForm"].validate((valid) => {
 				if (valid) {
-				
 					// this.visible = false
 					this.confirmLoading = true
 					let makeLeftPorts = []
@@ -539,6 +529,7 @@ export default {
 				}
 			})
 		},
+		//取消添加
 		handleCancel() {
 			this.visible = false
 			this.dynamicValidateForm = {
@@ -590,6 +581,44 @@ export default {
 				key: Date.now(),
 			})
 		},
+		//加载数据
+		loadData() {
+			this.loadVisible = true
+		},
+		//取消加载
+		cancelLoad() {
+			this.loadVisible = false
+			this.jsonData = ""
+		},
+		//确认加载
+		confirmLoad() {
+			this.load(this.jsonData)
+			this.loadVisible = false
+			this.jsonData = ""
+		},
+		//显示当前连接数据
+		showData() {
+			this.showVisible = true
+			this.showJsonData = myDiagram.model.toJson()
+		},
+		//关闭显示数据
+		cancelShowData() {
+			this.showVisible = false
+		},
+		//查询
+		onSearch(value) {
+			if (value) {
+				let nowData = JSON.parse(nowJsonData)
+				let copyNowData = nowData
+				let searchData = copyNowData.nodeDataArray.filter((item) => {
+					return item.name.indexOf(value) != -1
+				})
+				copyNowData.nodeDataArray = searchData
+				this.load(JSON.stringify(copyNowData))
+			}else{
+				this.load(nowJsonData)
+			}
+		},
 	},
 }
 </script>
@@ -605,6 +634,9 @@ export default {
 		right: 0px;
 		.ant-btn {
 			margin-left: 10px;
+		}
+		.ant-input-group-wrapper {
+			width: 46%;
 		}
 	}
 }

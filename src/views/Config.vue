@@ -95,17 +95,33 @@ export default {
 			let key = e.key
 			this.selectedKeys = [`${key}`]
 			this.resotoreEditor()
+			//待数据过滤
+			switch (key) {
+				case "1": // Qubit
+					console.log(1)
+					break
+				case "2": //Hardware
+					console.log(2)
+					break
+				case "3": //Custom
+					console.log(3)
+					break
+				default:
+					break
+			}
+			
 		},
 		//初始化editor
 		initJsonEditor() {
 			let self = this
 
 			let options = {
-				// language: "en",
+				language: "en", //语言
 				mode: "tree",
 				modes: ["code", "form", "text", "tree", "view", "preview"], // allowed modes
 			}
 			let optionModel = {
+				language: "en",
 				text: "name",
 				mode: "tree",
 				modes: ["code", "form", "text", "tree", "view", "preview"], // allowed modes
@@ -188,25 +204,23 @@ export default {
 					//loading
 					this.confirmLoading = true
 					let nowJson = this.getJSON()
-					nowJson['version'] = this.confirmForm.versionNum
-					setTimeout(()=>{
+					nowJson["version"] = this.confirmForm.versionNum
+					setTimeout(() => {
 						this.confirmForm.versionNum = ""
 						this.confirmLoading = false
 						this.visible = false
-					},2000)
+					}, 2000)
 				}
 			})
 		},
 		//取消提交
-		handleCancel(){
+		handleCancel() {
 			this.visible = false
 		},
 		//设置为默认
-		setAsDefault(){
+		setAsDefault() {
 			//实现就是读取中间页面json，调用存储模板接口。刷新右侧
-			
-		}
-
+		},
 	},
 }
 </script>
@@ -216,7 +230,8 @@ export default {
 	display: none;
 }
 #Config {
-	#modelEditor,#jsonEditor{
+	#modelEditor,
+	#jsonEditor {
 		height: calc(100% - 80px);
 	}
 	.midDiv {
